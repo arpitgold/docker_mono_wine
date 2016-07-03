@@ -12,7 +12,22 @@ RUN apt-get update -y
 RUN apt-get install -y software-properties-common && add-apt-repository -y ppa:ubuntu-wine/ppa
 RUN apt-get update -y
 
-RUN apt-get install -y wine1.8 winetricks xvfb
+RUN apt-get install -y wine1.9.13 winetricks xvfb
 
 RUN apt-get purge -y software-properties-common
 RUN apt-get autoclean -y
+
+# Wget is needed by winetricks
+RUN apt-get update
+RUN apt-get install wget
+
+# Wine really doesn't like to be run as root, so let's set up a non-root
+# environment
+RUN useradd -d /home/wix -m -s /bin/bash wix
+USER wix
+ENV HOME /home/wix
+ENV WINEPREFIX /home/wix/.wine
+ENV WINEARCH win32
+
+# Install .NET Framework 4.0
+RUN wine wineboot && xvfb-run winetricks --unattended dotnet40 corefonts
